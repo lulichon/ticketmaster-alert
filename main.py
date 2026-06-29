@@ -36,7 +36,9 @@ for concert in concerts:
     nom = concert["nom"]
     url = concert["url"]
 
-    available = check_ticketmaster(url)
+  result = check_ticketmaster(url)
+available = result["available"]
+status = result["status"]
     previous = state.get(nom, {}).get("available", False)
 
     print(f"{nom} : {'disponible' if available else 'indisponible'}")
