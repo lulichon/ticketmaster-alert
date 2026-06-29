@@ -1,4 +1,3 @@
-```python
 import yaml
 import requests
 import os
@@ -74,4 +73,3 @@ for concert in concerts:
     }
 
 save_state(state)
-```
