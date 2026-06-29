@@ -25,12 +25,10 @@ def save_state(state):
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-
     payload = {
         "chat_id": CHAT_ID,
         "text": message
     }
-
     requests.post(url, data=payload, timeout=20)
 
 
@@ -38,13 +36,15 @@ with open("concerts.yaml", "r") as f:
     data = yaml.safe_load(f)
 
 concerts = data["concerts"]
-
 state = load_state()
 
 now = datetime.now(timezone.utc).isoformat()
 
-for concert in concerts:
+state["_meta"] = {
+    "last_global_check": now
+}
 
+for concert in concerts:
     nom = concert["nom"]
     url = concert["url"]
 
@@ -53,22 +53,28 @@ for concert in concerts:
     available = result["available"]
     status = result["status"]
 
-    previous = state.get(nom, {}).get("available", False)
+    previous_data = state.get(nom, {})
+    previous_available = previous_data.get("available", False)
+    previous_last_available = previous_data.get("last_available_at", "Jamais détectée")
 
     print(f"{nom} : {'disponible' if available else 'indisponible'}")
 
-    if available and not previous:
+    last_available_at = previous_last_available
 
+    if available:
+        last_available_at = now
+
+    if available and not previous_available:
         message = f"🚨 Billets détectés !\n\n🎟 {nom}\n🔗 {url}"
-
         send_telegram(message)
-
         print(f"Alerte envoyée pour {nom}")
 
     state[nom] = {
         "available": available,
         "status": status,
         "last_checked": now,
+        "last_available_at": last_available_at,
+        "category": result.get("category", "Catégorie inconnue"),
         "url": url
     }
 
