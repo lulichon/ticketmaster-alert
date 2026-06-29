@@ -22,7 +22,18 @@ jobs:
           mkdir -p public
           python - <<'PY'
           import json
-          from datetime import datetime
+          from datetime import datetime, timezone, timedelta
+
+          def format_date(value):
+              if not value or value == "Jamais" or value == "Jamais détectée":
+                  return value
+
+              try:
+                  dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                  dt_fr = dt.astimezone(timezone(timedelta(hours=2)))
+                  return dt_fr.strftime("%d/%m/%Y à %H:%M:%S")
+              except:
+                  return value
 
           try:
               with open("state.json", "r") as f:
@@ -36,8 +47,8 @@ jobs:
               available = item.get("available", False)
               status = item.get("status", "unavailable")
               url = item.get("url", "#")
-              last_checked = item.get("last_checked", "Jamais")
-              last_available = item.get("last_available_at", "Jamais détectée")
+              last_checked = format_date(item.get("last_checked", "Jamais"))
+              last_available = format_date(item.get("last_available_at", "Jamais détectée"))
               category = item.get("category", "Catégorie inconnue")
 
               if available:
@@ -188,6 +199,13 @@ jobs:
                 text-align: center;
                 color: #71717a;
                 margin-top: 35px;
+              }}
+
+              @media (max-width: 800px) {{
+                body {{ padding: 20px; }}
+                .main {{ flex-direction: column; align-items: flex-start; }}
+                .grid {{ grid-template-columns: 1fr; }}
+                h1 {{ font-size: 34px; }}
               }}
             </style>
           </head>
