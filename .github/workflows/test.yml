@@ -1,15 +1,17 @@
-name: Test Telegram
-
-permissions:
-  contents: write
+name: Ticketmaster Check + Dashboard
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +23,8 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python main.py
+      - name: Check Ticketmaster
+        run: python main.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
@@ -32,3 +35,14 @@ jobs:
           git add state.json
           git diff --cached --quiet || git commit -m "Update state"
           git push
+
+      - name: Create dashboard
+        run: |
+          mkdir -p public
+          python generate_dashboard.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - uses: actions/deploy-pages@v4
