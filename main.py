@@ -49,6 +49,12 @@ status = result["status"]
         print(f"Alerte envoyée pour {nom}")
 
     state[nom] = {
+        state[nom] = {
+    "available": available,
+    "status": status,
+    "last_checked": now,
+    "url": url
+}
         "available": available,
         "last_checked": now
     }
