@@ -1,8 +1,9 @@
 import yaml
 import requests
 import time
+import os
 
-BOT_TOKEN = "8590192785:AAEv_lni7mhtNOJFNZc4FJuFZEnSwm7mTZs"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = "2127560202"
 
 with open("concerts.yaml", "r") as f:
