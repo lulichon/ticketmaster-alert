@@ -1,0 +1,82 @@
+name: Deploy Dashboard
+
+on:
+workflow_dispatch:
+schedule:
+- cron: "*/5 * * * *"
+
+permissions:
+contents: write
+pages: write
+id-token: write
+
+jobs:
+deploy:
+runs-on: ubuntu-latest
+
+```
+steps:
+  - uses: actions/checkout@v4
+
+  - name: Generate dashboard
+    run: |
+      cat <<EOF > index.html
+      <!doctype html>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta http-equiv="refresh" content="30">
+        <title>Ticketmaster Alert</title>
+
+        <style>
+          body {
+            font-family: Arial;
+            background: #111;
+            color: #eee;
+            padding: 30px;
+          }
+
+          .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+          }
+        </style>
+      </head>
+
+      <body>
+
+      <h1>🎟 Ticketmaster Alert</h1>
+
+      <div class="card">
+        <h2>Bad Bunny</h2>
+
+        <p>
+          Vérification automatique active toutes les 5 minutes.
+        </p>
+
+        <p>
+          Dernière mise à jour GitHub Actions :
+          $(date)
+        </p>
+
+        <p>
+          <a href="https://www.ticketmaster.fr/fr/manifestation/bad-bunny-billet/idmanif/622222">
+            Ouvrir Ticketmaster
+          </a>
+        </p>
+      </div>
+
+      </body>
+      </html>
+      EOF
+
+  - name: Upload Pages artifact
+    uses: actions/upload-pages-artifact@v3
+    with:
+      path: .
+
+  - name: Deploy to GitHub Pages
+    uses: actions/deploy-pages@v4
+```
