@@ -1,0 +1,296 @@
+import json
+from datetime import datetime, timezone, timedelta
+
+def format_date(value):
+    if not value or value == "Jamais" or value == "Jamais détectée":
+        return value
+
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        dt_fr = dt.astimezone(timezone(timedelta(hours=2)))
+        return dt_fr.strftime("%d/%m/%Y à %H:%M:%S")
+    except:
+        return value
+
+
+try:
+    with open("state.json", "r") as f:
+        state = json.load(f)
+except:
+    state = {}
+
+meta = state.get("_meta", {})
+
+last_global_check = format_date(
+    meta.get("last_global_check", "Jamais")
+)
+
+cards = ""
+
+for name, item in state.items():
+
+    if name == "_meta":
+        continue
+
+    available = item.get("available", False)
+    status = item.get("status", "unavailable")
+    url = item.get("url", "#")
+
+    last_checked = format_date(
+        item.get("last_checked", "Jamais")
+    )
+
+    last_available = format_date(
+        item.get("last_available_at", "Jamais détectée")
+    )
+
+    category = item.get("category", "Catégorie inconnue")
+
+    if available:
+        status_html = f'''
+        <div class="status available">
+            ✅ Disponible
+            <br>
+            <span>({category})</span>
+        </div>
+        '''
+
+    elif status == "queue":
+        status_html = '''
+        <div class="status queue">
+            ⏳ File d’attente
+            <br>
+            <span>Ticketmaster</span>
+        </div>
+        '''
+
+    else:
+        status_html = '''
+        <div class="status unavailable">
+            ❌ Indisponible
+        </div>
+        '''
+
+    cards += f"""
+    <section class="card">
+
+      <div class="main">
+
+        <div>
+          <h2>{name}</h2>
+
+          <p>🎟 Surveillance Ticketmaster</p>
+
+          <p>
+            <a href="{url}" target="_blank">
+              🔗 Ouvrir Ticketmaster
+            </a>
+          </p>
+        </div>
+
+        {status_html}
+
+      </div>
+
+      <div class="grid">
+
+        <div class="info">
+          <div class="icon">🕒</div>
+
+          <div>
+            <p>Dernière vérification</p>
+            <strong>{last_checked}</strong>
+          </div>
+        </div>
+
+        <div class="info">
+          <div class="icon">📅</div>
+
+          <div>
+            <p>Dernière disponibilité détectée</p>
+            <strong>{last_available}</strong>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+    """
+
+html = f"""
+<!doctype html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta http-equiv="refresh" content="30">
+
+<title>Ticketmaster Alert</title>
+
+<style>
+
+body {{
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #102033, #05080d);
+  color: #f4f4f5;
+  padding: 40px;
+}}
+
+h1 {{
+  text-align: center;
+  font-size: 46px;
+  margin-bottom: 8px;
+}}
+
+.subtitle {{
+  text-align: center;
+  color: #a1a1aa;
+  margin-bottom: 40px;
+  font-size: 20px;
+}}
+
+.card {{
+  max-width: 980px;
+  margin: 0 auto 22px auto;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}}
+
+.main {{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+}}
+
+h2 {{
+  font-size: 34px;
+  margin: 0 0 16px 0;
+}}
+
+p {{
+  color: #c4c4cc;
+  font-size: 18px;
+}}
+
+a {{
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: bold;
+}}
+
+.status {{
+  font-size: 34px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 260px;
+}}
+
+.status span {{
+  font-size: 20px;
+  color: #c4c4cc;
+}}
+
+.available {{
+  color: #4ade80;
+}}
+
+.unavailable {{
+  color: #f87171;
+}}
+
+.queue {{
+  color: #facc15;
+}}
+
+.grid {{
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}}
+
+.info {{
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 18px;
+  padding: 20px;
+}}
+
+.icon {{
+  font-size: 34px;
+}}
+
+.info p {{
+  margin: 0 0 8px 0;
+}}
+
+.info strong {{
+  font-size: 18px;
+}}
+
+footer {{
+  text-align: center;
+  color: #71717a;
+  margin-top: 35px;
+}}
+
+@media (max-width: 800px) {{
+
+  body {{
+    padding: 20px;
+  }}
+
+  .main {{
+    flex-direction: column;
+    align-items: flex-start;
+  }}
+
+  .grid {{
+    grid-template-columns: 1fr;
+  }}
+
+  h1 {{
+    font-size: 34px;
+  }}
+
+}}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🎟 Ticketmaster Alert</h1>
+
+<div class="subtitle">
+Surveillance automatique des billets
+</div>
+
+<div class="subtitle">
+Dernière vérification exécutée :
+<strong>{last_global_check}</strong>
+</div>
+
+{cards if cards else "<p>Aucune donnée disponible.</p>"}
+
+<footer>
+GitHub Actions · Mise à jour automatique toutes les 5 minutes
+</footer>
+
+</body>
+</html>
+"""
+
+with open("public/index.html", "w") as f:
+    f.write(html)
