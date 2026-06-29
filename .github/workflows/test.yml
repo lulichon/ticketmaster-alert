@@ -1,5 +1,6 @@
 name: Test Telegram
-
+permissions:
+  contents: write
 on:
   workflow_dispatch:
   schedule:
@@ -15,5 +16,12 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python main.py
+            - name: Save state
+        run: |
+          git config user.name "ticketmaster-alert-bot"
+          git config user.email "actions@github.com"
+          git add state.json
+          git diff --cached --quiet || git commit -m "Update state"
+          git push
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
